@@ -27,11 +27,24 @@ which nodejs binary you want to include in the image. `nodejs_linux_amd64` is th
 
 Bazel Toolchains are intended to support cross-compilation, e.g. building a linux binary from mac or windows.
 Most JavaScript use cases produce platform-independent code,
-but the exception is native modules which use [node-gyp](https://github.com/nodejs/node-gyp).
-Any native modules will still be fetched and built, by npm/yarn, for your host platform,
-so they will not work on the target platform.
-The workaround is to perform the npm_install inside a docker container so that it produces modules for the target platform.
+but the exception is native modules which contain machine-specific code.
 
+There are several techniques used by npm packages.
+
+Some packages ship pre-built "bindings" for each platform, using a system like
+<https://github.com/prebuild/prebuild-install> to tell their install script how to
+download them.
+In these cases, you can just use the environment variables documented by Electron
+<https://www.electronjs.org/docs/latest/tutorial/using-native-node-modules#using-npm>
+to run an additional `npm_install` or `yarn_install` rule which installs packages
+for the target platform.
+Then in your BUILD files, use a `select` to pick the library for the target platform.
+You can find an example in this repo in `/e2e/nodejs_image`.
+
+Some packages use [node-gyp](https://github.com/nodejs/node-gyp) to compile native code at install-time.
+They always compile for the host platform, so they will not work on the target platform.
+The workaround is to perform the npm_install inside a docker container so that it produces modules for the target platform,
+using something like `container_run_and_extract_layer` from rules_docker.
 Follow https://github.com/bazelbuild/rules_nodejs/issues/506 for updates on support for node-gyp cross-compilation.
 
 ## Registering a custom toolchain
