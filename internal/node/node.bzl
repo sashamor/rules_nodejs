@@ -361,8 +361,8 @@ if (process.cwd() !== __dirname) {
         executable = ctx.outputs.launcher_sh
 
     # syntax sugar: allows you to avoid repeating the entry point in data
-    # entry point is only needed in runfiles if it is a .js file
-    if len(ctx.files.entry_point) == 1 and ctx.files.entry_point[0].extension == "js":
+    # entry point is only needed in runfiles if it is a javascript file
+    if len(ctx.files.entry_point) == 1 and ctx.files.entry_point[0].extension in ["js", "mjs"]:
         runfiles.extend(ctx.files.entry_point)
 
     return [
